@@ -1,0 +1,18 @@
+#include "dcmotor.h"
+
+void DCMOTOR_init(void){
+	DCMOTOR_DIR |= (1<<0)|(1<<1);
+	DCMOTOR_DIR &= ~((1<<0)|(1<<1));
+}
+void DCMOTOR_clockWise(void){
+	DCMOTOR_DIR &= ~(1<<0);
+	DCMOTOR_DIR |= (1<<1);
+}
+void DCMOTOR_antiClockWise(void){
+	DCMOTOR_DIR &= ~(1<<1);
+	DCMOTOR_DIR |= (1<<0);
+}
+void DCMOTOR_stop(void){
+	DCMOTOR_DIR &= ~(1<<0);
+	DCMOTOR_DIR &= ~(1<<1);
+}

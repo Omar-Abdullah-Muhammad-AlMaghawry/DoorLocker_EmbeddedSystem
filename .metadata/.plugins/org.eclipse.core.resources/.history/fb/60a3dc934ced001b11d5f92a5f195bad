@@ -1,0 +1,58 @@
+#include "keypad.h"
+#include "lcd.h"
+#include "timer0.h"
+#include "uart.h"
+#include "password.h"
+
+
+int main(void) {
+	uint8 * password = "";
+	uint8 done = 0;
+	uint8 key;
+	uint8 match = 0;
+	uint8 c;
+	UartConfig *UartConf = { disableParity, oneStop, eightBits, 9600 };
+	Timer0Config *Timer0Conf = { CTC, 0, noPrescaling, 64 };
+	SREG = 1;
+	UART_init(UartConf);
+	TIMER0_init(Timer0Conf);
+	LCD_init();
+	UART_sentChar(UartConf, 'P');
+	UART_recieveString(UartConf, password, 5);
+	if (strcmp((*password),"")!=-1) {//////////////////////////////
+		done = newPassword(password);
+		if (done)
+			{
+			UART_sentChar(UartConf, 'N');
+			UART_sentString(UartConf, password);
+			}
+	}
+	while (1) {
+		LCD_clearScreen();
+		LCD_displayStringRowColumn(0, 0, "+: open door");
+		LCD_displayStringRowColumn(0, 0, "-: change pass");
+		key = KEYPAD_getPressed();
+		if (key == '+') {
+			if (checkPassword(password))
+				UART_sentChar(UartConf, 'O');
+			else {
+				for (c = 0; c < 2; c++) {
+					if (checkPassword(password)) {
+						UART_sentChar(UartConf, 'O');
+						match = 1;
+						break;
+					}
+				}
+				if (!match)
+					UART_sentChar(UartConf, 'W');
+
+			}
+		} else if (key == '-') {
+			done = newPassword(password);
+			if (done)
+				UART_sentString(UartConf, password);
+		}
+	}
+	return 0;
+}
+

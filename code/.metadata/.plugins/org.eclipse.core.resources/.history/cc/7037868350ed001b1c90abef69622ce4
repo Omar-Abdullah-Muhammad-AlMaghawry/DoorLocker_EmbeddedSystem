@@ -1,0 +1,16 @@
+#ifndef DCMOTOR
+#define DCMOTOR
+#include "std_types.h"
+#include "micro_config.h"
+#include "common_macros.h"
+
+#define DCMOTOR_DIR DDRC
+#define DCMOTOR_OUTPUT PORTC
+
+void DCMOTOR_init(void);
+void DCMOTOR_clockWise(void);
+void DCMOTOR_antiClockWise(void);
+void DCMOTOR_stop(void);
+
+
+#endif

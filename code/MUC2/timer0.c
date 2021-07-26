@@ -1,0 +1,88 @@
+#include "timer0.h"
+
+static volatile void (*callBackfn)(void) = NULL_ptr;
+
+void TIMER0_init(Timer0Config *conf) {
+	TCNT0 = conf->initialVal; //initial value
+
+	if (conf->mode == normal)
+		TIMSK |= (1 << TOIE0); //enable intr
+	else
+		TIMSK |= (1 << OCIE0); //enable intr
+
+	TCCR0 = 0;
+
+	if ((conf->mode == normal) || (conf->mode == CTC))
+		TCCR0 |= (1 << FOC0); //non PWM
+	else
+		TCCR0 &= ~(1 << FOC0); //PWM
+
+	TCCR0 = (TCCR0 & 0xF8) | conf->prescale; //prescaling = 0, 1 ,2,3,4,5 in first 3 bits
+
+	/*define the mode of timer by chosing the 3rd bit (wgm01) and put the second bit on it*/
+	TCCR0 = (TCCR0 & 0xF7) | ((conf->mode & 0x02) << WGM01);
+	/*define the mode of timer by chosing the 6th bit (wgm00) and put the 1st bit on it*/
+	TCCR0 = (TCCR0 & 0xBF) | ((conf->mode & 0x01) << WGM00);
+
+	if (conf->mode == fastPWM) {
+		TCCR0 |= (1 << COM01); //non inverting mode
+		DDRB = DDRB | (1 << PB3); // Configure PB3/OC0 Pin as output pin
+	}
+	/*putting the compare val*/
+	if (conf->mode != normal)
+		OCR0 = conf->compareVal;
+
+	/* //another sol
+	 switch(conf->mode){
+	 case normal:
+	 TCCR0 = 0;
+	 TCCR0 |= conf->prescale; //prescaling = 0, 1 ,2,3,4,5
+	 TCCR0 |= (1<<FOC0);//non PWM
+	 TIMSK |= (1<<TOIE0);//enable intr
+	 break;
+	 case CTC:
+	 TCCR0= 0;
+	 TCCR0 |= conf->prescale;
+	 ///*
+	 // * non pwm
+	 // * enable ctc
+	 // *
+	 // *
+	 TCCR0 |= (1<<FOC0)|(1<<WGM01)|(1<<COM01)|(1<<COM00);
+	 OCR0=conf->compareVal;
+	 TIMSK |= (1<<OCIE0); //enable intr
+
+	 break;
+	 case fastPWM:
+	 TCCR0= 0;
+	 TCCR0 |= conf->prescale;
+	 ///*
+	 // * non pwm
+	 // * enable fast pwm
+	 // * enable non inverting mode
+	 // *
+	 TCCR0 |= (1<<WGM00)|(1<<WGM01)|(1<<COM01);
+	 OCR0=conf->compareVal; // compare value
+	 DDRB |=(1<<3);
+	 break;
+	 }*/
+}
+
+void TIMER0_setCallBack(void (*callBackFNParameter)(void)) {
+	callBackfn = callBackFNParameter;
+}
+ISR(TIMER0_COMP_vect) {
+	if (callBackfn != NULL_ptr) {
+		(*callBackfn)();
+	}
+}
+ISR(TIMER0_OVF_vect) {
+	if (callBackfn != NULL_ptr)
+		(*callBackfn)();
+}
+void TIMER0_deInit(void) {
+	TCNT0 = 0;
+	TCCR0 = 0;
+	OCR0 = 0;
+	TIMSK &= ~((1 << TOIE0) | (1 << OCIE0));
+}

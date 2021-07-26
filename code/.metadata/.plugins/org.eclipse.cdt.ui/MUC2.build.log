@@ -1,0 +1,20 @@
+16:13:52 **** Incremental Build of configuration Debug for project MUC2 ****
+make all 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega16 MUC2.elf
+AVR Memory Usage
+----------------
+Device: atmega16
+
+Program:    7292 bytes (44.5% Full)
+(.text + .data + .bootloader)
+
+Data:         33 bytes (3.2% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 
+
+16:13:53 Build Finished. 0 errors, 0 warnings. (took 250ms)
+
